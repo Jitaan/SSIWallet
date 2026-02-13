@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "ssiWallet",
+    "slug": "ssi-wallet",
+    "version": "1.0.0",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.ssi.wallet",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.ssi.wallet"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan QR codes."
+        }
+      ]
+    ]
+  }
+}

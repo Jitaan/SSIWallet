@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SSI Issuer Portal</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #007AFF;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+    }
+    button:hover { background: #0056b3; }
+    #qrCode {
+      margin-top: 20px;
+      text-align: center;
+    }
+    #qrCode img {
+      max-width: 300px;
+      border: 1px solid #ddd;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 15px;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 15px;
+    }
+    .issuer-info {
+      background: #e8f4fd;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏥 SSI Issuer Portal</h1>
+
+  <div class="issuer-info" id="issuerInfo">
+    Loading issuer information...
+  </div>
+
+  <div class="card">
+    <h2>Issue New Credential</h2>
+
+    <div class="form-group">
+      <label>Recipient DID:</label>
+      <input
+        type="text"
+        id="recipientDID"
+        placeholder="did:key:z6Mk... (paste from wallet app)"
+        required
+      >
+    </div>
+
+    <div class="form-group">
+      <label>Credential Type:</label>
+      <select id="credentialType" required>
+        <option value="">Select type...</option>
+        <option value="RefugeeRegistration">Refugee Registration</option>
+        <option value="SchoolEnrollment">School Enrollment</option>
+        <option value="HealthRecord">Health Record</option>
+        <option value="VaccinationRecord">Vaccination Record</option>
+        <option value="BirthCertificate">Birth Certificate</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Credential Data (JSON):</label>
+      <textarea id="credentialData" rows="6">{
+  "name": "Amara",
+  "registrationNumber": "REF-2025-001234",
+  "registrationDate": "2025-02-14"
+}</textarea>
+    </div>
+
+    <button onclick="issueCredential()">🎫 Issue Credential</button>
+
+    <div id="result"></div>
+  </div>
+
+  <div id="qrCode"></div>
+
+  <script>
+    // Load issuer info on page load
+    fetch('/api/issuer/info')
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('issuerInfo').innerHTML =
+          `<strong>✅ Issuer:</strong> ${data.name || 'SSI Issuer'}<br>
+           <strong>DID:</strong> ${data.issuerDID}`;
+      })
+      .catch(() => {
+        document.getElementById('issuerInfo').innerHTML =
+          '❌ Cannot connect to backend';
+      });
+
+    async function issueCredential() {
+      const recipientDID = document.getElementById('recipientDID').value;
+      const credentialType = document.getElementById('credentialType').value;
+      const credentialDataRaw = document.getElementById('credentialData').value;
+
+      // Validate
+      if (!recipientDID || !credentialType) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      let credentialData;
+      try {
+        credentialData = JSON.parse(credentialDataRaw);
+      } catch (e) {
+        alert('Invalid JSON in Credential Data field');
+        return;
+      }
+
+      document.getElementById('result').innerHTML = '⏳ Issuing credential...';
+      document.getElementById('qrCode').innerHTML = '';
+
+      try {
+        const response = await fetch('/api/issuer/issue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipientDID,
+            credentialType,
+            credentialData
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          document.getElementById('result').innerHTML =
+            `<div class="success">
+              ✅ Credential issued successfully!<br>
+              <strong>Type:</strong> ${credentialType}<br>
+              <strong>Recipient:</strong> ${recipientDID.substring(0, 30)}...
+            </div>`;
+
+          document.getElementById('qrCode').innerHTML =
+            `<div class="card">
+              <h3 style="text-align:center">📱 QR Code for Recipient</h3>
+              <img src="${result.qrCode}" alt="QR Code">
+              <p style="text-align:center;color:#999;font-size:13px">
+                Recipient scans this with their SSI Wallet app
+              </p>
+            </div>`;
+
+        } else {
+          throw new Error(result.error || 'Unknown error');
+        }
+
+      } catch (error) {
+        document.getElementById('result').innerHTML =
+          `<div class="error">❌ Error: ${error.message}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>
