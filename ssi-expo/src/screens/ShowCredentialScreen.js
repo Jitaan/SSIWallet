@@ -6,11 +6,13 @@ import {
   ActivityIndicator,
   ScrollView
 } from 'react-native';
+import QRCode from 'react-qr-code';
 import WalletService from '../services/WalletService';
 import QRService from '../services/QRService';
 
 export default function ShowCredentialScreen() {
   const [walletData, setWalletData] = useState(null);
+  const [qrData, setQrData] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,6 +23,13 @@ export default function ShowCredentialScreen() {
     try {
       const data = await WalletService.prepareCredentialsForSharing();
       setWalletData(data);
+      
+      const qrString = QRService.prepareWalletQR(
+        data.credentials || [],
+        data.did,
+        data.trustScore
+      );
+      setQrData(qrString);
     } catch (error) {
       console.error('Error preparing data:', error);
     } finally {
@@ -38,21 +47,31 @@ export default function ShowCredentialScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-
       <Text style={styles.title}>Your Identity</Text>
       <Text style={styles.subtitle}>Show this screen to the verifier</Text>
 
-      {/* QR Placeholder */}
+      {/* QR Code */}
       <View style={styles.qrBox}>
-        <Text style={styles.qrIcon}>▦</Text>
-        <Text style={styles.qrLabel}>QR Code</Text>
+        {qrData ? (
+          <QRCode
+            value={qrData}
+            size={200}
+            bgColor="#f0f8ff"
+            fgColor="#007AFF"
+          />
+        ) : (
+          <View>
+            <Text style={styles.qrIcon}>▦</Text>
+            <Text style={styles.qrLabel}>No data</Text>
+          </View>
+        )}
       </View>
 
       {/* DID */}
       <View style={styles.infoBox}>
         <Text style={styles.infoLabel}>YOUR DID</Text>
         <Text style={styles.infoValue} numberOfLines={2}>
-          {walletData?.did}
+          {walletData?.did || 'N/A'}
         </Text>
       </View>
 
@@ -60,7 +79,7 @@ export default function ShowCredentialScreen() {
       <View style={styles.infoBox}>
         <Text style={styles.infoLabel}>TRUST SCORE</Text>
         <Text style={styles.trustScore}>
-          {walletData?.trustScore}
+          {walletData?.trustScore || 0}
         </Text>
       </View>
 
@@ -75,7 +94,6 @@ export default function ShowCredentialScreen() {
       <Text style={styles.footer}>
         Verifier can verify this offline
       </Text>
-
     </ScrollView>
   );
 }
@@ -108,7 +126,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 30,
-    backgroundColor: '#f0f8ff'
+    backgroundColor: '#f0f8ff',
+    padding: 15
   },
   qrIcon: {
     fontSize: 100,
@@ -117,7 +136,8 @@ const styles = StyleSheet.create({
   qrLabel: {
     fontSize: 14,
     color: '#007AFF',
-    fontWeight: '600'
+    fontWeight: '600',
+    textAlign: 'center'
   },
   infoBox: {
     width: '100%',
