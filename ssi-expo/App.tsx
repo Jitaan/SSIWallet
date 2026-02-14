@@ -62,7 +62,7 @@ const App: React.FC = () => {
         initialRouteName={hasWallet ? 'WalletHome' : 'Onboarding'}
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#007AFF'
+            backgroundColor: '#0a0a0a'
           },
           headerTintColor: '#fff',
           headerTitleStyle: {
@@ -81,8 +81,8 @@ const App: React.FC = () => {
         <Stack.Screen 
           name="WalletHome" 
           component={WalletHomeScreen}
-          options={{ 
-            title: 'SSI Wallet',
+          options={{
+            headerShown: false,
             headerLeft: () => null // Disable back button
           }}
         />

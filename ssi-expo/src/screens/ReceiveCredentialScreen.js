@@ -109,24 +109,51 @@ export default function ReceiveCredentialScreen({ navigation }) {
       </View>
     );
   }
-
-  return (
+  return showCamera ? (
+    <View style={styles.cameraContainer}>
+      <CameraView
+        style={StyleSheet.absoluteFillObject}
+        facing="back"
+        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+        onBarcodeScanned={handleScan}
+      />
+      <View style={styles.cameraOverlay}>
+        <View style={styles.scanFrame} />
+        <Text style={styles.cameraOverlayText}>
+          Point camera at QR code
+        </Text>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => setShowCamera(false)}
+        >
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  ) : (
     <View style={styles.container}>
-      <Text style={styles.title}>Receive Credential</Text>
-      <Text style={styles.subtitle}>
-        Scan QR code from issuer portal
-      </Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Receive Credential</Text>
+        <Text style={styles.subtitle}>
+          Scan QR code from issuer to add to your wallet
+        </Text>
+      </View>
 
-      <TouchableOpacity style={styles.cameraBox} onPress={handleOpenCamera}>
-        <Text style={styles.cameraIcon}>📷</Text>
-        <Text style={styles.cameraText}>Tap to Scan QR</Text>
-        <Text style={styles.cameraSubtext}>
-          Point at QR code from issuer
+      <TouchableOpacity style={styles.scanCard} onPress={handleOpenCamera}>
+        <View style={styles.scanIcon}>
+          <Text style={styles.scanIconText}>📷</Text>
+        </View>
+        <Text style={styles.scanText}>Tap to Scan QR Code</Text>
+        <Text style={styles.scanSubtext}>
+          Point at credential QR from issuer
         </Text>
       </TouchableOpacity>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#007AFF" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3b82f6" />
+          <Text style={styles.loadingText}>Processing credential...</Text>
+        </View>
       ) : (
         <TouchableOpacity
           style={styles.testButton}
@@ -138,9 +165,12 @@ export default function ReceiveCredentialScreen({ navigation }) {
         </TouchableOpacity>
       )}
 
-      <Text style={styles.info}>
-        Ask the issuer to show the QR code from their portal
-      </Text>
+      <View style={styles.infoCard}>
+        <Text style={styles.infoIcon}>ℹ️</Text>
+        <Text style={styles.infoText}>
+          Ask the issuer to display their credential QR code, then scan it to add to your wallet
+        </Text>
+      </View>
     </View>
   );
 }
@@ -148,65 +178,100 @@ export default function ReceiveCredentialScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#0a0a0a',
     padding: 20,
-    paddingTop: 40
+    paddingTop: 60
+  },
+  header: {
+    marginBottom: 40,
+    alignItems: 'center'
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5
+    color: '#ffffff',
+    marginBottom: 8
   },
   subtitle: {
     fontSize: 14,
-    color: '#999',
-    marginBottom: 30
+    color: '#888888',
+    textAlign: 'center',
+    maxWidth: 300
   },
-  cameraBox: {
-    width: 280,
-    height: 280,
-    borderWidth: 3,
-    borderColor: '#007AFF',
+  scanCard: {
+    backgroundColor: '#1a1a1a',
     borderRadius: 20,
-    justifyContent: 'center',
+    padding: 40,
     alignItems: 'center',
-    marginBottom: 30,
-    backgroundColor: '#f0f8ff',
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: '#2a2a2a',
     borderStyle: 'dashed'
   },
-  cameraIcon: {
-    fontSize: 60,
-    marginBottom: 10
-  },
-  cameraText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#007AFF'
-  },
-  cameraSubtext: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 5
-  },
-  testButton: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 10,
-    width: '100%',
+  scanIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#2a2a2a',
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20
   },
+  scanIconText: {
+    fontSize: 50
+  },
+  scanText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 8
+  },
+  scanSubtext: {
+    fontSize: 13,
+    color: '#888888',
+    textAlign: 'center'
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    padding: 20
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#888888',
+    marginTop: 12
+  },
+  testButton: {
+    backgroundColor: '#1a1a1a',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#3b82f6'
+  },
   testButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#3b82f6',
+    fontSize: 15,
     fontWeight: '600'
   },
-  info: {
+  infoCard: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#2a2a2a'
+  },
+  infoIcon: {
+    fontSize: 20,
+    marginRight: 12
+  },
+  infoText: {
+    flex: 1,
     fontSize: 13,
-    color: '#999',
-    textAlign: 'center'
+    color: '#888888',
+    lineHeight: 20
   },
   cameraContainer: {
     flex: 1,
@@ -214,24 +279,35 @@ const styles = StyleSheet.create({
   },
   cameraOverlay: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 50
+    paddingBottom: 80
+  },
+  scanFrame: {
+    width: 250,
+    height: 250,
+    borderWidth: 3,
+    borderColor: '#ffffff',
+    borderRadius: 20,
+    marginBottom: 40
   },
   cameraOverlayText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 16,
-    marginBottom: 20
+    fontWeight: '600',
+    marginBottom: 40,
+    textAlign: 'center'
   },
   cancelButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: 15,
-    borderRadius: 10,
-    width: '80%',
-    alignItems: 'center'
+    backgroundColor: '#1a1a1a',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ef4444'
   },
   cancelButtonText: {
-    color: '#fff',
+    color: '#ef4444',
     fontSize: 16,
     fontWeight: '600'
   }
